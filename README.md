@@ -6,7 +6,7 @@ idea of a "二号机" for streamers.
 > [!WARNING]
 > The project is still in the early design stage.
 >
-> Most of documentation is written by AI, to be re-written...
+> Most of the documentation is written by AI and needs to be rewritten.
 
 ## Core Use Case
 
