@@ -257,3 +257,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# plan local
+
+**/findings.md
+**/progress.md
+**/task_plan.md

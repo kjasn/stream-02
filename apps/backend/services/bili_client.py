@@ -11,7 +11,6 @@ import zlib
 from hashlib import sha256
 
 import aiohttp
-from dotenv import load_dotenv
 
 # ── Proto 协议 ──────────────────────────────────────────────
 
@@ -310,15 +309,17 @@ class BiliLiveClient:
                     await self._ws.close()
 
 
-# 加载 .env 文件
-load_dotenv()
+async def bili_client():
+    from dotenv import load_dotenv
 
-if __name__ == "__main__":
+    # 加载 .env 文件
+    load_dotenv()
+
     client = BiliLiveClient(
-        id_code=os.getenv("BILI_ID_CODE"),
-        app_id=int(os.getenv("BILI_APP_ID")),  # 注意转换为 int
-        key=os.getenv("BILI_KEY"),
-        secret=os.getenv("BILI_SECRET"),
+        id_code=os.getenv("BILI_ID_CODE", ""),
+        app_id=int(os.getenv("BILI_APP_ID", "0")),
+        key=os.getenv("BILI_KEY", ""),
+        secret=os.getenv("BILI_SECRET", ""),
     )
 
     # 弹幕回调
