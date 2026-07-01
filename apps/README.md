@@ -6,6 +6,7 @@
 
 
 # clone llama.cpp-omni for stream
+cd llm_server
 git clone -b feat/stream_with_text https://github.com/21ess/llama.cpp-omni
 make build-cpp # 编译 llama.cpp-omni
 
