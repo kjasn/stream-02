@@ -8,7 +8,7 @@ import numpy as np
 from livekit import rtc
 
 from ...common.types import AvSegment
-from .client import AudioFrameBuffer, VideoFrameBuffer
+from .avbuf import AudioFrameBuffer, VideoFrameBuffer
 from .token import LiveKitTokenProvider
 
 logger = logging.getLogger("backend.livekit.client")

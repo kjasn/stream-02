@@ -86,24 +86,35 @@ class VideoFrameBuffer:
 
         from PIL import Image
 
-        arr = np.frombuffer(frame.data, dtype=np.uint8).reshape(
-            (frame.height, frame.width, 3)
-            if frame.num_planes == 1
-            else frame.num_planes
-        )
-        # Handle RGB24 format from LiveKit VideoStream
+        try:
+            rgb_frame = (
+                frame
+                if frame.type == rtc.VideoBufferType.RGB24
+                else frame.convert(rtc.VideoBufferType.RGB24)
+            )
+        except Exception as exc:
+            logger.warning(f"Cannot convert video frame to RGB24: {exc}")
+            return
+
+        data = np.frombuffer(rgb_frame.data, dtype=np.uint8)
+        expected_size = rgb_frame.height * rgb_frame.width * 3
+        if data.size != expected_size:
+            logger.warning(
+                "Cannot interpret RGB24 video frame: "
+                f"size={data.size}, expected={expected_size}, "
+                f"width={rgb_frame.width}, height={rgb_frame.height}"
+            )
+            return
+
+        arr = data.reshape((rgb_frame.height, rgb_frame.width, 3))
+
         try:
             img = Image.fromarray(arr, mode="RGB")
         except (ValueError, TypeError):
-            # Try reinterpreting if shape doesn't match
-            if arr.size == frame.height * frame.width * 3:
-                arr = arr.reshape((frame.height, frame.width, 3))
-                img = Image.fromarray(arr, mode="RGB")
-            else:
-                logger.warning(
-                    f"Cannot interpret video frame: shape={arr.shape}, size={arr.size}"
-                )
-                return
+            logger.warning(
+                f"Cannot create image from video frame: shape={arr.shape}, size={arr.size}"
+            )
+            return
 
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=85)
