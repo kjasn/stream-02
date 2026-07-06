@@ -2,23 +2,22 @@
 MiniCPMO C++ HTTP Server - C++ 进程管理模块
 管理 llama-server 子进程生命周期、健康检查、服务注册
 """
-import os
-import sys
+
 import json
+import os
+import platform
 import shutil
 import socket
-import time
 import subprocess
 import threading
-import platform
-from typing import Optional, List, Dict, Any
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import List, Optional
 
 import requests
 from PIL import Image
 
 from . import config
-
 
 # ====================== GPU 内存监控 ======================
 GPU_MEMORY_THRESHOLD_MB = 2000
@@ -29,9 +28,15 @@ def get_gpu_memory_info() -> Optional[dict]:
     try:
         gpu_id = os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0]
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=memory.total,memory.used,memory.free",
-             "--format=csv,noheader,nounits", f"--id={gpu_id}"],
-            capture_output=True, text=True, timeout=5
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.total,memory.used,memory.free",
+                "--format=csv,noheader,nounits",
+                f"--id={gpu_id}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0:
             parts = result.stdout.strip().split(",")
@@ -40,10 +45,10 @@ def get_gpu_memory_info() -> Optional[dict]:
                 used = int(parts[1].strip())
                 free = int(parts[2].strip())
                 return {
-                    'total_mb': total,
-                    'used_mb': used,
-                    'free_mb': free,
-                    'utilization': round(used / total * 100, 1) if total > 0 else 0
+                    "total_mb": total,
+                    "used_mb": used,
+                    "free_mb": free,
+                    "utilization": round(used / total * 100, 1) if total > 0 else 0,
                 }
     except Exception as e:
         print(f"[显存监控] 获取显存信息失败: {e}", flush=True)
@@ -59,19 +64,25 @@ def check_gpu_memory_and_restart_if_needed(model_dir: str, gpu_devices: str) -> 
     if mem_info is None:
         return False
 
-    free_mb = mem_info['free_mb']
-    print(f"[显存监控] 剩余显存: {free_mb} MB (阈值: {GPU_MEMORY_THRESHOLD_MB} MB)", flush=True)
+    free_mb = mem_info["free_mb"]
+    print(
+        f"[显存监控] 剩余显存: {free_mb} MB (阈值: {GPU_MEMORY_THRESHOLD_MB} MB)",
+        flush=True,
+    )
 
     if free_mb < GPU_MEMORY_THRESHOLD_MB:
-        print(f"[显存监控] 显存不足 ({free_mb} MB < {GPU_MEMORY_THRESHOLD_MB} MB)，准备重启 C++ 服务器...", flush=True)
+        print(
+            f"[显存监控] 显存不足 ({free_mb} MB < {GPU_MEMORY_THRESHOLD_MB} MB)，准备重启 C++ 服务器...",
+            flush=True,
+        )
 
         if _cpp_restart_lock is None:
             return False
 
         with _cpp_restart_lock:
             mem_info = get_gpu_memory_info()
-            if mem_info and mem_info['free_mb'] >= GPU_MEMORY_THRESHOLD_MB:
-                print(f"[显存监控] 显存已恢复，取消重启", flush=True)
+            if mem_info and mem_info["free_mb"] >= GPU_MEMORY_THRESHOLD_MB:
+                print("[显存监控] 显存已恢复，取消重启", flush=True)
                 return False
             try:
                 restart_cpp_server(model_dir, gpu_devices)
@@ -112,9 +123,7 @@ def restart_cpp_server(model_dir: str, gpu_devices: str):
     config.global_sent_wav_files = set()
 
     start_cpp_server(
-        model_dir=model_dir,
-        gpu_devices=gpu_devices,
-        port=config.CPP_SERVER_PORT
+        model_dir=model_dir, gpu_devices=gpu_devices, port=config.CPP_SERVER_PORT
     )
 
     print("[重启] C++ llama-server 重启完成", flush=True)
@@ -142,7 +151,7 @@ def restart_cpp_server(model_dir: str, gpu_devices: str):
         resp = requests.post(
             f"{config.CPP_SERVER_URL}/v1/stream/omni_init",
             json=cpp_request,
-            timeout=60.0
+            timeout=60.0,
         )
 
         if resp.status_code == 200:
@@ -170,16 +179,16 @@ def stack_images(images: List[Image.Image]) -> Image.Image:
     w, h = images[0].size
 
     if len(images) == 2:
-        result = Image.new('RGB', (w * 2, h))
+        result = Image.new("RGB", (w * 2, h))
         result.paste(images[0], (0, 0))
         result.paste(images[1], (w, 0))
     elif len(images) == 3:
-        result = Image.new('RGB', (w * 2, h * 2), (0, 0, 0))
+        result = Image.new("RGB", (w * 2, h * 2), (0, 0, 0))
         result.paste(images[0], (0, 0))
         result.paste(images[1], (w, 0))
         result.paste(images[2], (0, h))
     else:
-        result = Image.new('RGB', (w * 2, h * 2))
+        result = Image.new("RGB", (w * 2, h * 2))
         result.paste(images[0], (0, 0))
         result.paste(images[1], (w, 0))
         result.paste(images[2], (0, h))
@@ -190,6 +199,7 @@ def stack_images(images: List[Image.Image]) -> Image.Image:
 
 
 # ====================== 独立健康检查服务器 ======================
+
 
 class HealthCheckHandler(BaseHTTPRequestHandler):
     """独立的健康检查和打断HTTP处理器，运行在单独线程中"""
@@ -203,11 +213,13 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            response = json.dumps({
-                "status": "healthy",
-                "message": "服务正常 (C++ backend)",
-                "backend": "cpp"
-            })
+            response = json.dumps(
+                {
+                    "status": "healthy",
+                    "message": "服务正常 (C++ backend)",
+                    "backend": "cpp",
+                }
+            )
             self.wfile.write(response.encode())
         else:
             self.send_response(404)
@@ -226,22 +238,31 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
                     break_resp = requests.post(
                         f"{config.CPP_SERVER_URL}/v1/stream/break",
                         json={"reason": "user_interrupt_from_health_thread"},
-                        timeout=5.0
+                        timeout=5.0,
                     )
                     if break_resp.status_code == 200:
-                        print(f"[独立线程] C++ 生成已中止: {break_resp.json()}", flush=True)
+                        print(
+                            f"[独立线程] C++ 生成已中止: {break_resp.json()}",
+                            flush=True,
+                        )
                         cpp_break_success = True
                     else:
-                        print(f"[独立线程] C++ break 调用失败: {break_resp.status_code}", flush=True)
+                        print(
+                            f"[独立线程] C++ break 调用失败: {break_resp.status_code}",
+                            flush=True,
+                        )
                 except Exception as e:
                     print(f"[独立线程] C++ break 调用异常: {e}", flush=True)
 
-            self._send_json(200, {
-                "success": True,
-                "message": "当前轮对话已打断",
-                "state": "break",
-                "cpp_break": cpp_break_success
-            })
+            self._send_json(
+                200,
+                {
+                    "success": True,
+                    "message": "当前轮对话已打断",
+                    "state": "break",
+                    "cpp_break": cpp_break_success,
+                },
+            )
 
         elif self.path == "/omni/stop":
             print("======= [独立线程] 收到快速停止指令 =======", flush=True)
@@ -253,22 +274,31 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
                     break_resp = requests.post(
                         f"{config.CPP_SERVER_URL}/v1/stream/break",
                         json={"reason": "session_stop_from_health_thread"},
-                        timeout=5.0
+                        timeout=5.0,
                     )
                     if break_resp.status_code == 200:
-                        print(f"[独立线程] C++ 生成已中止 (stop): {break_resp.json()}", flush=True)
+                        print(
+                            f"[独立线程] C++ 生成已中止 (stop): {break_resp.json()}",
+                            flush=True,
+                        )
                         cpp_break_success = True
                     else:
-                        print(f"[独立线程] C++ break 调用失败 (stop): {break_resp.status_code}", flush=True)
+                        print(
+                            f"[独立线程] C++ break 调用失败 (stop): {break_resp.status_code}",
+                            flush=True,
+                        )
                 except Exception as e:
                     print(f"[独立线程] C++ break 调用异常 (stop): {e}", flush=True)
 
-            self._send_json(200, {
-                "success": True,
-                "message": "会话已停止",
-                "state": "session_stop",
-                "cpp_break": cpp_break_success
-            })
+            self._send_json(
+                200,
+                {
+                    "success": True,
+                    "message": "会话已停止",
+                    "state": "session_stop",
+                    "cpp_break": cpp_break_success,
+                },
+            )
 
         else:
             self.send_response(404)
@@ -294,19 +324,20 @@ def start_health_server(port: int):
     health_port = port + 1
     server = HTTPServer(("0.0.0.0", health_port), HealthCheckHandler)
     print(f"独立健康检查/打断服务器已启动: http://0.0.0.0:{health_port}", flush=True)
-    print(f"  - GET  /health     - 健康检查", flush=True)
-    print(f"  - POST /omni/break - 快速打断", flush=True)
-    print(f"  - POST /omni/stop  - 快速停止", flush=True)
+    print("  - GET  /health     - 健康检查", flush=True)
+    print("  - POST /omni/break - 快速打断", flush=True)
+    print("  - POST /omni/stop  - 快速停止", flush=True)
     server.serve_forever()
 
 
 # ====================== 服务注册 ======================
 
+
 def get_local_ip() -> str:
     """获取本机 IP 地址"""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s.connect(('8.8.8.8', 80))
+        s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
     finally:
         s.close()
@@ -336,14 +367,19 @@ def register_service_node(port: int, duplex_mode: bool):
         if response.status_code == 200:
             print(f"服务节点注册成功: {response.text}", flush=True)
         else:
-            print(f"服务节点注册失败: HTTP {response.status_code}, 响应: {response.text}", flush=True)
+            print(
+                f"服务节点注册失败: HTTP {response.status_code}, 响应: {response.text}",
+                flush=True,
+            )
     except Exception as e:
         import traceback
+
         print(f"服务节点注册异常: {e}", flush=True)
         traceback.print_exc()
 
 
 # ====================== 输出目录管理 ======================
+
 
 def reset_output_dir():
     """启动时重置 output 目录"""
@@ -381,10 +417,14 @@ def clear_output_subfolders():
                 except Exception as e:
                     print(f"[清空输出] 删除失败 {sub_item_path}: {e}", flush=True)
 
-    print(f"[清空输出] 已清空 {config.CPP_OUTPUT_DIR} 下的子文件夹内容 (删除 {cleared_count} 项)", flush=True)
+    print(
+        f"[清空输出] 已清空 {config.CPP_OUTPUT_DIR} 下的子文件夹内容 (删除 {cleared_count} 项)",
+        flush=True,
+    )
 
 
 # ====================== C++ 进程管理 ======================
+
 
 def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
     """启动 C++ llama-server"""
@@ -398,9 +438,15 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
         os.path.join(llamacpp_root, "build/bin/llama-server.exe"),
     ]
     if platform.system() == "Darwin":
-        candidates.append(os.path.join(llamacpp_root, "build-arm64-apple-clang-release/bin/llama-server"))
+        candidates.append(
+            os.path.join(
+                llamacpp_root, "build-arm64-apple-clang-release/bin/llama-server"
+            )
+        )
     elif platform.system() != "Windows":
-        candidates.append(os.path.join(llamacpp_root, "build-x64-linux-cuda-release/bin/llama-server"))
+        candidates.append(
+            os.path.join(llamacpp_root, "build-x64-linux-cuda-release/bin/llama-server")
+        )
 
     for c in candidates:
         if os.path.exists(c):
@@ -422,12 +468,9 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
     env = os.environ.copy()
 
     if platform.system() == "Darwin":
-        dyld_paths = [
-            os.path.dirname(server_bin),
-            env.get('DYLD_LIBRARY_PATH', '')
-        ]
+        dyld_paths = [os.path.dirname(server_bin), env.get("DYLD_LIBRARY_PATH", "")]
         env["DYLD_LIBRARY_PATH"] = ":".join(p for p in dyld_paths if p)
-        print(f"Platform: macOS (Metal)", flush=True)
+        print("Platform: macOS (Metal)", flush=True)
     else:
         env["CUDA_VISIBLE_DEVICES"] = gpu_devices
         cuda_env_path = os.environ.get("CUDA_LIB_PATH", "/usr/local/cuda/lib64")
@@ -435,21 +478,28 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
             cuda_env_path,
             llamacpp_root + "/build/bin",
             "/usr/lib/x86_64-linux-gnu",
-            env.get('LD_LIBRARY_PATH', '')
+            env.get("LD_LIBRARY_PATH", ""),
         ]
         env["LD_LIBRARY_PATH"] = ":".join(p for p in cuda_lib_paths if p)
-        print(f"Platform: Linux (CUDA)", flush=True)
+        print("Platform: Linux (CUDA)", flush=True)
         print(f"CUDA_VISIBLE_DEVICES={gpu_devices}", flush=True)
 
     cmd = [
         server_bin,
-        "--host", "0.0.0.0",
-        "--port", str(port),
-        "--model", model_path,
-        "--ctx-size", str(config.DEFAULT_CTX_SIZE),
-        "--n-gpu-layers", str(config.DEFAULT_N_GPU_LAYERS),
-        "--repeat-penalty", "1.05",
-        "--temp", "0.7",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        str(port),
+        "--model",
+        model_path,
+        "--ctx-size",
+        str(config.DEFAULT_CTX_SIZE),
+        "--n-gpu-layers",
+        str(config.DEFAULT_N_GPU_LAYERS),
+        "--repeat-penalty",
+        "1.05",
+        "--temp",
+        "0.7",
     ]
 
     print(f"启动 C++ llama-server: {' '.join(cmd)}", flush=True)
@@ -461,13 +511,14 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        encoding='utf-8',
-        errors='replace'
+        encoding="utf-8",
+        errors="replace",
     )
 
     # 启动日志读取线程
     def log_reader():
         try:
+            assert config.cpp_server_process
             for line in config.cpp_server_process.stdout:
                 print(f"[CPP] {line.rstrip()}", flush=True)
         except Exception as e:
@@ -480,9 +531,11 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
     max_wait = 180
     for i in range(max_wait):
         try:
-            resp = requests.get(f"http://{config.CPP_SERVER_HOST}:{port}/health", timeout=2)
+            resp = requests.get(
+                f"http://{config.CPP_SERVER_HOST}:{port}/health", timeout=2
+            )
             if resp.status_code == 200:
-                print(f"C++ llama-server 启动成功 (等待 {i+1} 秒)", flush=True)
+                print(f"C++ llama-server 启动成功 (等待 {i + 1} 秒)", flush=True)
                 return True
         except Exception:
             pass

@@ -10,7 +10,6 @@ import json
 import os
 import re
 import shutil
-import sys
 import threading
 import time
 import traceback
@@ -183,6 +182,7 @@ async def omni_stop(session_id: Optional[str] = None):
     stopped_session_id = cfg.current_active_session_id
 
     try:
+        assert cfg.http_client
         break_resp = await cfg.http_client.post(
             f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={}
         )
@@ -236,6 +236,7 @@ async def omni_break():
         cfg.is_breaking = True
 
         try:
+            assert cfg.http_client
             break_resp = await cfg.http_client.post(
                 f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={}
             )
@@ -272,6 +273,7 @@ async def init_sys_prompt(request: InitSysPromptRequest):
         raise HTTPException(status_code=503, detail="服务正在重启中，请稍后重试")
 
     try:
+        assert cfg.http_client
         cppmgr.clear_output_subfolders()
 
         if request.duplex_mode is not None:
@@ -731,6 +733,7 @@ async def _streaming_prefill_duplex(
     timing_stats,
     prefill_start_time,
 ):
+    assert cfg.http_client
     """双工模式 prefill：直接转发给 C++"""
     with cfg.session_lock:
         cnt = cfg.current_request_counter
@@ -859,6 +862,7 @@ async def _streaming_prefill_highfps_direct(
     is_main_image=False,
 ):
     """高刷单工模式 prefill：直接 prefill，不延迟"""
+    assert cfg.http_client
     with cfg.session_lock:
         cnt = cfg.current_request_counter
         cfg.current_request_counter += 1
@@ -975,6 +979,7 @@ async def _streaming_prefill_simplex(
     prefill_start_time,
 ):
     """普通单工模式 prefill：使用延迟一拍机制"""
+    assert cfg.http_client
     with cfg.session_lock:
         cnt = cfg.current_request_counter
         cfg.current_request_counter += 1
@@ -1077,6 +1082,8 @@ async def _streaming_prefill_simplex(
 
 async def _streaming_generate_simplex(generate_request_time):
     """单工模式 SSE 流式生成（轮询 WAV 目录）"""
+    assert cfg.pending_prefill_data
+    assert cfg.http_client
     has_pending = cfg.pending_prefill_data is not None
     pending_cnt = cfg.pending_prefill_data.get("cnt", -1) if has_pending else -1
     print(
@@ -1184,7 +1191,7 @@ async def _streaming_generate_simplex(generate_request_time):
             )
 
             decode_task = asyncio.create_task(
-                cfg.http_client.post(
+                cfg.http_client.post(  # pyright: ignore[reportOptionalMemberAccess]
                     f"{cfg.CPP_SERVER_URL}/v1/stream/decode",
                     json=cpp_request,
                     timeout=600.0,
@@ -1485,7 +1492,7 @@ async def _streaming_generate_duplex(generate_request_time):
                 flush=True,
             )
 
-            async with cfg.http_client.stream(
+            async with cfg.http_client.stream(  # pyright: ignore[reportOptionalMemberAccess]
                 "POST",
                 f"{cfg.CPP_SERVER_URL}/v1/stream/decode",
                 json=cpp_request,
@@ -1552,7 +1559,7 @@ async def _streaming_generate_duplex(generate_request_time):
                         for wav_file in sorted(
                             wav_files,
                             key=lambda f: (
-                                int(re.search(r"wav_(\d+)\.wav", f).group(1))
+                                int(re.search(r"wav_(\d+)\.wav", f).group(1))  # pyright: ignore[reportOptionalMemberAccess]
                                 if re.search(r"wav_(\d+)\.wav", f)
                                 else 0
                             ),

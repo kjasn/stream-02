@@ -2,12 +2,15 @@
 MiniCPMO C++ HTTP Server - 配置模块
 管理全局状态、环境变量、路径常量
 """
+
 import os
 import sys
 import threading
 import socket
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from httpx import AsyncClient
 
 # ====================== 路径常量 ======================
 # 默认指向 apps/llm-server/ 下的同级目录
@@ -16,11 +19,13 @@ _DEFAULT_ROOT = Path(__file__).resolve().parent.parent  # apps/llm-server/
 # C++ 服务器配置
 CPP_SERVER_HOST = "127.0.0.1"
 CPP_SERVER_PORT = None  # 在 lifespan 中根据 Python 端口设置
-CPP_SERVER_URL = None   # 在 lifespan 中根据 Python 端口设置
+CPP_SERVER_URL = None  # 在 lifespan 中根据 Python 端口设置
 
 # 模型配置 - 可通过环境变量覆盖
 LLAMACPP_ROOT = os.environ.get("LLAMACPP_ROOT", str(_DEFAULT_ROOT / "llama.cpp-omni"))
-DEFAULT_MODEL_DIR = os.environ.get("MODEL_DIR", str(_DEFAULT_ROOT / "models" / "openbmb" / "MiniCPM-o-4_5-gguf"))
+DEFAULT_MODEL_DIR = os.environ.get(
+    "MODEL_DIR", str(_DEFAULT_ROOT / "models" / "openbmb" / "MiniCPM-o-4_5-gguf")
+)
 DEFAULT_LLM_MODEL = os.environ.get("LLM_MODEL", "")
 DEFAULT_GPU_DEVICES = os.environ.get("CUDA_VISIBLE_DEVICES", "")
 DEFAULT_CTX_SIZE = int(os.environ.get("CTX_SIZE", "8192"))
@@ -66,9 +71,14 @@ def auto_detect_llm_model(model_dir: str) -> str:
 
     all_gguf = glob.glob(os.path.join(model_dir, "*.gguf"))
     if all_gguf:
-        llm_candidates = [f for f in all_gguf
-                         if not any(x in os.path.basename(f).lower()
-                                   for x in ['audio', 'vision', 'tts', 'projector'])]
+        llm_candidates = [
+            f
+            for f in all_gguf
+            if not any(
+                x in os.path.basename(f).lower()
+                for x in ["audio", "vision", "tts", "projector"]
+            )
+        ]
         if llm_candidates:
             return os.path.basename(sorted(llm_candidates)[0])
 
@@ -76,8 +86,10 @@ def auto_detect_llm_model(model_dir: str) -> str:
 
 
 # 临时文件目录
-TEMP_DIR = os.environ.get("LLM_SERVER_TEMP_DIR",
-    os.path.join(os.path.dirname(__file__), "temp_streaming_prefill"))
+TEMP_DIR = os.environ.get(
+    "LLM_SERVER_TEMP_DIR",
+    os.path.join(os.path.dirname(__file__), "temp_streaming_prefill"),
+)
 
 # C++ llama-server 输出目录
 DEFAULT_CPP_OUTPUT_DIR = os.path.join(LLAMACPP_ROOT, "tools/omni/output")
@@ -88,7 +100,7 @@ def _get_default_register_url():
     """获取默认注册地址（本机 IP:8025）"""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
+        s.connect(("8.8.8.8", 80))
         local_ip = s.getsockname()[0]
         s.close()
         return f"http://{local_ip}:8025"
@@ -130,12 +142,13 @@ global_sent_wav_files: set = set()
 
 # WAV 发送时序日志
 WAV_TIMING_LOG_PATH = os.path.join(
-    os.environ.get("LLM_SERVER_OUTPUT_DIR", CPP_OUTPUT_DIR), "wav_timing.log")
+    os.environ.get("LLM_SERVER_OUTPUT_DIR", CPP_OUTPUT_DIR), "wav_timing.log"
+)
 wav_timing_log_file: Optional[Any] = None
 last_wav_send_time: Optional[float] = None
 
 # HTTP 客户端 (由 lifespan 初始化)
-http_client: Optional[Any] = None  # httpx.AsyncClient
+http_client: Optional[AsyncClient] = None  # httpx.AsyncClient
 
 
 def init_from_args(args):
@@ -143,21 +156,21 @@ def init_from_args(args):
     global CPP_SERVER_PORT, CPP_SERVER_URL, CPP_OUTPUT_DIR
 
     # 设置输出目录
-    if hasattr(args, 'output_dir') and args.output_dir:
+    if hasattr(args, "output_dir") and args.output_dir:
         CPP_OUTPUT_DIR = args.output_dir
 
     # 设置模型目录
-    if hasattr(args, 'model_dir') and args.model_dir:
+    if hasattr(args, "model_dir") and args.model_dir:
         global DEFAULT_MODEL_DIR
         DEFAULT_MODEL_DIR = args.model_dir
 
     # 设置 duplication mode
-    if hasattr(args, 'duplex') and args.duplex:
+    if hasattr(args, "duplex") and args.duplex:
         global current_duplex_mode
         current_duplex_mode = True
 
     # 端口配置
-    if hasattr(args, 'port'):
+    if hasattr(args, "port"):
         CPP_SERVER_PORT = args.port + 10000
         CPP_SERVER_URL = f"http://{CPP_SERVER_HOST}:{CPP_SERVER_PORT}"
 
@@ -166,6 +179,7 @@ def load_dotenv_if_needed():
     """加载 .env 文件（如果存在）"""
     try:
         from dotenv import load_dotenv
+
         _env_path = _DEFAULT_ROOT.parent / ".env"
         if _env_path.exists():
             load_dotenv(_env_path)
