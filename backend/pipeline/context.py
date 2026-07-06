@@ -5,6 +5,7 @@ from collections import deque
 from typing import Optional
 
 from backend.common.types import DanmakuEvent
+
 from .priority import compute_priority
 
 PROMPT_TEMPLATE = """你是一个直播间AI助手。以下是最近{seconds}秒的弹幕动态：

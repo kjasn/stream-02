@@ -66,5 +66,5 @@
 
     2. 启动服务
         ```sh
-
+        uv run -m backend
         ```
