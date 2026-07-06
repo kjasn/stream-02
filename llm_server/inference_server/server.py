@@ -47,9 +47,7 @@ async def lifespan(app: FastAPI):
     print(f"显存监控: {'启用' if cfg.GPU_MEMORY_CHECK else '禁用'}", flush=True)
 
     # 启动健康检查服务器
-    cfg.health_server_thread = threading.Thread(
-        target=cppmgr.start_health_server, args=(app.state.port,), daemon=True
-    )
+    cfg.health_server_thread = threading.Thread(target=cppmgr.start_health_server, args=(app.state.port,), daemon=True)
     cfg.health_server_thread.start()
 
     # 创建临时目录
@@ -116,9 +114,7 @@ async def lifespan(app: FastAPI):
 
     # 注册服务节点
     try:
-        cppmgr.register_service_node(
-            port=app.state.port, duplex_mode=app.state.default_duplex_mode
-        )
+        cppmgr.register_service_node(port=app.state.port, duplex_mode=app.state.default_duplex_mode)
     except Exception as e:
         print(f"服务节点注册失败: {e}", flush=True)
 
@@ -183,9 +179,7 @@ async def omni_stop(session_id: Optional[str] = None):
 
     try:
         assert cfg.http_client
-        break_resp = await cfg.http_client.post(
-            f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={}
-        )
+        break_resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={})
         if break_resp.status_code == 200:
             print("[omni_stop] C++ 生成已中止", flush=True)
     except Exception as e:
@@ -196,9 +190,7 @@ async def omni_stop(session_id: Optional[str] = None):
     if cfg.wav_timing_log_file:
         try:
             cfg.wav_timing_log_file.write(f"{'-' * 120}\n")
-            cfg.wav_timing_log_file.write(
-                f"[会话停止] {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n"
-            )
+            cfg.wav_timing_log_file.write(f"[会话停止] {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n")
             cfg.wav_timing_log_file.close()
         except Exception:
             pass
@@ -237,9 +229,7 @@ async def omni_break():
 
         try:
             assert cfg.http_client
-            break_resp = await cfg.http_client.post(
-                f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={}
-            )
+            break_resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/break", json={})
             if break_resp.status_code == 200:
                 print("[omni_break] C++ 生成已中止", flush=True)
             else:
@@ -263,9 +253,7 @@ async def omni_break():
 async def init_sys_prompt(request: InitSysPromptRequest):
     """初始化系统提示"""
     if cfg.is_breaking:
-        print(
-            "[init_sys_prompt] 检测到残留的 is_breaking=True，重置为 False", flush=True
-        )
+        print("[init_sys_prompt] 检测到残留的 is_breaking=True，重置为 False", flush=True)
         cfg.is_breaking = False
 
     if cfg.cpp_restarting:
@@ -289,20 +277,12 @@ async def init_sys_prompt(request: InitSysPromptRequest):
             elif request.media_type.lower() in ["video", "omni"]:
                 msg_type = 2
             else:
-                raise HTTPException(
-                    status_code=400, detail=f"不支持的media_type: {request.media_type}"
-                )
+                raise HTTPException(status_code=400, detail=f"不支持的media_type: {request.media_type}")
         else:
             msg_type = 2
 
-        high_quality_mode = (
-            request.high_quality_mode
-            if request.high_quality_mode is not None
-            else False
-        )
-        high_fps_mode = (
-            request.high_fps_mode if request.high_fps_mode is not None else False
-        )
+        high_quality_mode = request.high_quality_mode if request.high_quality_mode is not None else False
+        high_fps_mode = request.high_fps_mode if request.high_fps_mode is not None else False
         language = request.language if request.language is not None else "zh"
 
         is_audio_mode = msg_type == 1
@@ -311,9 +291,7 @@ async def init_sys_prompt(request: InitSysPromptRequest):
         quality_name = "高清" if high_quality_mode else "普通"
         fps_name = "高刷" if high_fps_mode else "标准帧率"
 
-        duplex_mode_changed = cfg.model_state_initialized and (
-            cfg.current_duplex_mode != duplex_mode
-        )
+        duplex_mode_changed = cfg.model_state_initialized and (cfg.current_duplex_mode != duplex_mode)
         if duplex_mode_changed:
             print(
                 f"[警告] duplex_mode 从 {cfg.current_duplex_mode} 变为 {duplex_mode}，将被忽略",
@@ -321,9 +299,7 @@ async def init_sys_prompt(request: InitSysPromptRequest):
             )
             duplex_mode = cfg.current_duplex_mode
 
-        media_type_changed = cfg.model_state_initialized and (
-            cfg.current_msg_type != msg_type
-        )
+        media_type_changed = cfg.model_state_initialized and (cfg.current_msg_type != msg_type)
         if media_type_changed:
             print(
                 f"[模式切换] media_type 从 {cfg.current_msg_type} 变为 {msg_type}",
@@ -370,16 +346,12 @@ async def init_sys_prompt(request: InitSysPromptRequest):
                 flush=True,
             )
 
-            resp = await cfg.http_client.post(
-                f"{cfg.CPP_SERVER_URL}/v1/stream/omni_init", json=cpp_request
-            )
+            resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/omni_init", json=cpp_request)
 
             if resp.status_code != 200:
                 error_text = resp.text
                 print(f"C++ omni_init 失败: {error_text}", flush=True)
-                raise HTTPException(
-                    status_code=500, detail=f"C++ omni_init 失败: {error_text}"
-                )
+                raise HTTPException(status_code=500, detail=f"C++ omni_init 失败: {error_text}")
 
             cpp_result = resp.json()
             print(f"C++ omni_init 成功: {cpp_result}", flush=True)
@@ -516,15 +488,11 @@ async def streaming_prefill(request: StreamingPrefillRequest):
                 if len(audio_np.shape) > 1:
                     audio_np = audio_np.mean(axis=1)
                 if file_sr != 16000:
-                    audio_np = librosa.resample(
-                        audio_np, orig_sr=file_sr, target_sr=16000
-                    )
+                    audio_np = librosa.resample(audio_np, orig_sr=file_sr, target_sr=16000)
                 audio_np = audio_np.astype(np.float32)
                 sr = 16000
             except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail=f"音频数据解码失败: {str(e)}"
-                )
+                raise HTTPException(status_code=400, detail=f"音频数据解码失败: {str(e)}")
         timing_stats["audio_decode"] = (time.time() - t0) * 1000
 
         # 解码图片
@@ -537,9 +505,7 @@ async def streaming_prefill(request: StreamingPrefillRequest):
                 if pil_image.mode != "RGB":
                     pil_image = pil_image.convert("RGB")
             except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail=f"图片数据解码失败: {str(e)}"
-                )
+                raise HTTPException(status_code=400, detail=f"图片数据解码失败: {str(e)}")
         timing_stats["image_decode"] = (time.time() - t0) * 1000
 
         # 高刷模式处理
@@ -560,15 +526,10 @@ async def streaming_prefill(request: StreamingPrefillRequest):
                     with cfg.high_fps_cache_lock:
                         if request.image_audio_id not in cfg.high_fps_subimage_cache:
                             cfg.high_fps_subimage_cache[request.image_audio_id] = {}
-                        cfg.high_fps_subimage_cache[request.image_audio_id][
-                            frame_idx
-                        ] = pil_image
-                        cached_count = len(
-                            cfg.high_fps_subimage_cache[request.image_audio_id]
-                        )
+                        cfg.high_fps_subimage_cache[request.image_audio_id][frame_idx] = pil_image
+                        cached_count = len(cfg.high_fps_subimage_cache[request.image_audio_id])
                         all_subframes_ready = all(
-                            i in cfg.high_fps_subimage_cache[request.image_audio_id]
-                            for i in [1, 2, 3, 4]
+                            i in cfg.high_fps_subimage_cache[request.image_audio_id] for i in [1, 2, 3, 4]
                         )
 
                     print(
@@ -580,19 +541,13 @@ async def streaming_prefill(request: StreamingPrefillRequest):
                         pending_audio = None
                         with cfg.high_fps_audio_lock:
                             if request.image_audio_id in cfg.high_fps_pending_audio:
-                                pending_audio = cfg.high_fps_pending_audio.pop(
-                                    request.image_audio_id
-                                )
+                                pending_audio = cfg.high_fps_pending_audio.pop(request.image_audio_id)
 
                         if pending_audio is not None:
                             audio_np, sr, _ = pending_audio
                             with cfg.high_fps_cache_lock:
-                                cached_frames = cfg.high_fps_subimage_cache.pop(
-                                    request.image_audio_id, {}
-                                )
-                            sorted_frames = sorted(
-                                cached_frames.items(), key=lambda x: x[0]
-                            )
+                                cached_frames = cfg.high_fps_subimage_cache.pop(request.image_audio_id, {})
+                            sorted_frames = sorted(cached_frames.items(), key=lambda x: x[0])
                             subimages = [img for _, img in sorted_frames]
                             stacked_image = cppmgr.stack_images(subimages)
                             pil_images = [stacked_image]
@@ -617,9 +572,7 @@ async def streaming_prefill(request: StreamingPrefillRequest):
 
             elif audio_np is not None:
                 with cfg.high_fps_cache_lock:
-                    cached_frames = cfg.high_fps_subimage_cache.pop(
-                        request.image_audio_id, {}
-                    )
+                    cached_frames = cfg.high_fps_subimage_cache.pop(request.image_audio_id, {})
 
                 if len(cached_frames) > 0:
                     sorted_frames = sorted(cached_frames.items(), key=lambda x: x[0])
@@ -639,9 +592,7 @@ async def streaming_prefill(request: StreamingPrefillRequest):
                             sr,
                             None,
                         )
-                    print(
-                        "[高刷模式] 音频到达但无子图缓存，暂存音频等待子图", flush=True
-                    )
+                    print("[高刷模式] 音频到达但无子图缓存，暂存音频等待子图", flush=True)
                     return {
                         "success": True,
                         "message": f"音频已暂存，等待子图 (image_audio_id={request.image_audio_id})",
@@ -745,13 +696,9 @@ async def _streaming_prefill_duplex(
         MIN_AUDIO_SAMPLES = 1600
         if len(audio_np) < MIN_AUDIO_SAMPLES:
             padding_len = MIN_AUDIO_SAMPLES - len(audio_np)
-            audio_np = np.pad(
-                audio_np, (0, padding_len), mode="constant", constant_values=0
-            )
+            audio_np = np.pad(audio_np, (0, padding_len), mode="constant", constant_values=0)
 
-        temp_audio_path = os.path.join(
-            cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav"
-        )
+        temp_audio_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav")
         audio_to_save = np.clip(audio_np, -1.0, 1.0).astype(np.float32)
         sf.write(temp_audio_path, audio_to_save, 16000, format="WAV", subtype="PCM_16")
     timing_stats["audio_save"] = (time.time() - t0) * 1000
@@ -762,9 +709,7 @@ async def _streaming_prefill_duplex(
         if cfg.current_high_fps_mode and len(pil_images) > 1:
             main_image = pil_images[0]
             rest_images = pil_images[1:]
-            main_path = os.path.join(
-                cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}_main.png"
-            )
+            main_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}_main.png")
             main_image.save(main_path, format="PNG")
             temp_image_paths.append(main_path)
             if len(rest_images) > 0:
@@ -777,9 +722,7 @@ async def _streaming_prefill_duplex(
                 temp_image_paths.append(stack_path)
                 print(f"[高刷模式] 处理 {len(pil_images)} 帧", flush=True)
         else:
-            img_path = os.path.join(
-                cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png"
-            )
+            img_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png")
             pil_images[0].save(img_path, format="PNG")
             temp_image_paths.append(img_path)
     timing_stats["image_save"] = (time.time() - t0) * 1000
@@ -793,9 +736,7 @@ async def _streaming_prefill_duplex(
             "cnt": cnt,
             "prompt_text": request.prompt_text or "",
         }
-        resp = await cfg.http_client.post(
-            f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0
-        )
+        resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0)
         cpp_success = resp.status_code == 200
     else:
         for i, img_path in enumerate(temp_image_paths):
@@ -873,12 +814,8 @@ async def _streaming_prefill_highfps_direct(
         MIN_AUDIO_SAMPLES = 1600
         if len(audio_np) < MIN_AUDIO_SAMPLES:
             padding_len = MIN_AUDIO_SAMPLES - len(audio_np)
-            audio_np = np.pad(
-                audio_np, (0, padding_len), mode="constant", constant_values=0
-            )
-        temp_audio_path = os.path.join(
-            cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav"
-        )
+            audio_np = np.pad(audio_np, (0, padding_len), mode="constant", constant_values=0)
+        temp_audio_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav")
         audio_to_save = np.clip(audio_np, -1.0, 1.0).astype(np.float32)
         sf.write(temp_audio_path, audio_to_save, 16000, format="WAV", subtype="PCM_16")
     timing_stats["audio_save"] = (time.time() - t0) * 1000
@@ -889,9 +826,7 @@ async def _streaming_prefill_highfps_direct(
         if len(pil_images) > 1:
             main_image = pil_images[0]
             rest_images = pil_images[1:]
-            main_path = os.path.join(
-                cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}_main.png"
-            )
+            main_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}_main.png")
             main_image.save(main_path, format="PNG")
             temp_image_paths.append(main_path)
             if len(rest_images) > 0:
@@ -903,9 +838,7 @@ async def _streaming_prefill_highfps_direct(
                 stacked_image.save(stack_path, format="PNG")
                 temp_image_paths.append(stack_path)
         else:
-            img_path = os.path.join(
-                cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png"
-            )
+            img_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png")
             pil_images[0].save(img_path, format="PNG")
             temp_image_paths.append(img_path)
     timing_stats["image_save"] = (time.time() - t0) * 1000
@@ -923,9 +856,7 @@ async def _streaming_prefill_highfps_direct(
         }
         if cfg.current_high_quality_mode and is_main_image:
             cpp_request["max_slice_nums"] = 2
-        resp = await cfg.http_client.post(
-            f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0
-        )
+        resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0)
         if resp.status_code != 200:
             cpp_success = False
             break
@@ -990,13 +921,9 @@ async def _streaming_prefill_simplex(
         MIN_AUDIO_SAMPLES = 1600
         if len(audio_np) < MIN_AUDIO_SAMPLES:
             padding_len = MIN_AUDIO_SAMPLES - len(audio_np)
-            audio_np = np.pad(
-                audio_np, (0, padding_len), mode="constant", constant_values=0
-            )
+            audio_np = np.pad(audio_np, (0, padding_len), mode="constant", constant_values=0)
 
-        temp_audio_path = os.path.join(
-            cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav"
-        )
+        temp_audio_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.wav")
         audio_to_save = np.clip(audio_np, -1.0, 1.0).astype(np.float32)
         sf.write(temp_audio_path, audio_to_save, 16000, format="WAV", subtype="PCM_16")
     timing_stats["audio_save"] = (time.time() - t0) * 1000
@@ -1004,9 +931,7 @@ async def _streaming_prefill_simplex(
     t0 = time.time()
     temp_image_paths = []
     if len(pil_images) > 0:
-        img_path = os.path.join(
-            cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png"
-        )
+        img_path = os.path.join(cfg.TEMP_DIR, f"prefill_{cfg.current_active_session_id}_{cnt}.png")
         pil_images[0].save(img_path, format="PNG")
         temp_image_paths.append(img_path)
     timing_stats["image_save"] = (time.time() - t0) * 1000
@@ -1020,9 +945,7 @@ async def _streaming_prefill_simplex(
             "cnt": cnt,
             "prompt_text": request.prompt_text or "",
         }
-        resp = await cfg.http_client.post(
-            f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0
-        )
+        resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request, timeout=30.0)
         cpp_success = resp.status_code == 200
         timing_stats["cpp_http"] = (time.time() - t0) * 1000
 
@@ -1138,9 +1061,7 @@ async def _streaming_generate_simplex(generate_request_time):
                     "img_path_prefix": temp_image_path,
                     "cnt": last_cnt,
                 }
-                resp = await cfg.http_client.post(
-                    f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request
-                )
+                resp = await cfg.http_client.post(f"{cfg.CPP_SERVER_URL}/v1/stream/prefill", json=cpp_request)
                 if resp.status_code != 200:
                     print(f"C++ 最后一片 prefill 失败: {resp.text}", flush=True)
                 else:
@@ -1199,9 +1120,7 @@ async def _streaming_generate_simplex(generate_request_time):
             )
 
             cpp_output_base = cfg.CPP_OUTPUT_DIR
-            round_dir = os.path.join(
-                cpp_output_base, f"round_{cfg.current_round_number:03d}"
-            )
+            round_dir = os.path.join(cpp_output_base, f"round_{cfg.current_round_number:03d}")
             tts_wav_dir = os.path.join(round_dir, "tts_wav")
             llm_debug_dir = os.path.join(round_dir, "llm_debug")
 
@@ -1224,9 +1143,7 @@ async def _streaming_generate_simplex(generate_request_time):
 
             if os.path.exists(tts_wav_dir):
                 existing_wav_files = set(
-                    f
-                    for f in os.listdir(tts_wav_dir)
-                    if f.startswith("wav_") and f.endswith(".wav")
+                    f for f in os.listdir(tts_wav_dir) if f.startswith("wav_") and f.endswith(".wav")
                 )
 
             def read_chunk_text(llm_debug_dir, chunk_idx):
@@ -1234,9 +1151,7 @@ async def _streaming_generate_simplex(generate_request_time):
                 text_file = os.path.join(chunk_dir, "llm_text.txt")
                 if os.path.exists(text_file):
                     try:
-                        with open(
-                            text_file, "r", encoding="utf-8", errors="ignore"
-                        ) as f:
+                        with open(text_file, "r", encoding="utf-8", errors="ignore") as f:
                             return f.read().strip()
                     except Exception:
                         pass
@@ -1271,17 +1186,9 @@ async def _streaming_generate_simplex(generate_request_time):
                         print(f"[streaming_generate] C++ decode 异常: {e}", flush=True)
 
                 if os.path.exists(tts_wav_dir):
-                    wav_files = [
-                        f
-                        for f in os.listdir(tts_wav_dir)
-                        if f.startswith("wav_") and f.endswith(".wav")
-                    ]
+                    wav_files = [f for f in os.listdir(tts_wav_dir) if f.startswith("wav_") and f.endswith(".wav")]
                     wav_files = sort_wav_files(wav_files)
-                    new_wav_files = [
-                        f
-                        for f in wav_files
-                        if f not in existing_wav_files and f not in sent_wav_files
-                    ]
+                    new_wav_files = [f for f in wav_files if f not in existing_wav_files and f not in sent_wav_files]
 
                     for wav_file in new_wav_files:
                         wav_path = os.path.join(tts_wav_dir, wav_file)
@@ -1301,9 +1208,7 @@ async def _streaming_generate_simplex(generate_request_time):
                                 continue
 
                             if first_chunk_time is None:
-                                first_chunk_time = (
-                                    time.time() - generate_start_time
-                                ) * 1000
+                                first_chunk_time = (time.time() - generate_start_time) * 1000
                                 print(
                                     f"[Generate 音频首响] {first_chunk_time:.1f}ms [单工]",
                                     flush=True,
@@ -1311,27 +1216,19 @@ async def _streaming_generate_simplex(generate_request_time):
 
                             if audio_data.dtype != np.int16:
                                 audio_data = (audio_data * 32767).astype(np.int16)
-                            wav_base64 = base64.b64encode(audio_data.tobytes()).decode(
-                                "utf-8"
-                            )
+                            wav_base64 = base64.b64encode(audio_data.tobytes()).decode("utf-8")
 
                             chunk_duration = len(audio_data) / audio_sr
                             chunk_durations.append(chunk_duration)
 
-                            if chunk_idx not in chunk_texts and os.path.exists(
-                                llm_debug_dir
-                            ):
-                                chunk_text = read_chunk_text(
-                                    llm_debug_dir, llm_chunk_idx
-                                )
+                            if chunk_idx not in chunk_texts and os.path.exists(llm_debug_dir):
+                                chunk_text = read_chunk_text(llm_debug_dir, llm_chunk_idx)
                                 if chunk_text:
                                     chunk_texts[chunk_idx] = chunk_text
                                     all_generated_text.append(chunk_text)
                                     llm_chunk_idx += 1
                                     if first_text_time is None:
-                                        first_text_time = (
-                                            time.time() - generate_start_time
-                                        ) * 1000
+                                        first_text_time = (time.time() - generate_start_time) * 1000
                                         print(
                                             f"[Generate 文本首响] {first_text_time:.1f}ms [单工]",
                                             flush=True,
@@ -1345,9 +1242,7 @@ async def _streaming_generate_simplex(generate_request_time):
                                 },
                             }
                             if chunk_idx in chunk_texts:
-                                chunk_data["chunk_data"]["text"] = chunk_texts[
-                                    chunk_idx
-                                ]
+                                chunk_data["chunk_data"]["text"] = chunk_texts[chunk_idx]
                                 last_text_len += len(chunk_texts[chunk_idx])
 
                             yield f"data: {json.dumps(chunk_data, ensure_ascii=False)}\n\n"
@@ -1357,9 +1252,7 @@ async def _streaming_generate_simplex(generate_request_time):
                         except FileNotFoundError:
                             pass
                         except Exception as e:
-                            print(
-                                f"[Chunk #{chunk_idx}] 读取失败: {e} [单工]", flush=True
-                            )
+                            print(f"[Chunk #{chunk_idx}] 读取失败: {e} [单工]", flush=True)
                             sent_wav_files.add(wav_file)
 
                     done_flag_path = os.path.join(tts_wav_dir, "generation_done.flag")
@@ -1368,10 +1261,7 @@ async def _streaming_generate_simplex(generate_request_time):
                             with open(done_flag_path, "r") as f:
                                 last_wav_idx = int(f.read().strip())
                             last_wav_file = f"wav_{last_wav_idx}.wav"
-                            if (
-                                last_wav_file in sent_wav_files
-                                or last_wav_file in existing_wav_files
-                            ):
+                            if last_wav_file in sent_wav_files or last_wav_file in existing_wav_files:
                                 print(
                                     "[streaming_generate] 所有 wav 已发送，立即结束 [单工]",
                                     flush=True,
@@ -1380,9 +1270,7 @@ async def _streaming_generate_simplex(generate_request_time):
                         except Exception:
                             pass
 
-                    current_new_count = len(
-                        [f for f in wav_files if f not in existing_wav_files]
-                    )
+                    current_new_count = len([f for f in wav_files if f not in existing_wav_files])
                     if current_new_count == len(sent_wav_files):
                         no_new_wav_count += 1
                         if decode_done and no_new_wav_count >= 30000:
@@ -1413,11 +1301,7 @@ async def _streaming_generate_simplex(generate_request_time):
 
             total_generate_time = (time.time() - generate_start_time) * 1000
             total_audio_duration = sum(chunk_durations) if chunk_durations else 0
-            overall_rtf = (
-                total_generate_time / 1000 / total_audio_duration
-                if total_audio_duration > 0
-                else 0
-            )
+            overall_rtf = total_generate_time / 1000 / total_audio_duration if total_audio_duration > 0 else 0
 
             print(f"\n{'=' * 60}", flush=True)
             print("[Generate 性能总结] [单工]", flush=True)
@@ -1522,11 +1406,7 @@ async def _streaming_generate_duplex(generate_request_time):
                     if not line or not line.startswith("data:"):
                         continue
 
-                    data_str = (
-                        line[5:].strip()
-                        if line.startswith("data: ")
-                        else line[5:].strip()
-                    )
+                    data_str = line[5:].strip() if line.startswith("data: ") else line[5:].strip()
                     if data_str == "[DONE]":
                         print("[streaming_generate] 收到 [DONE] [双工]", flush=True)
                         break
@@ -1551,11 +1431,7 @@ async def _streaming_generate_duplex(generate_request_time):
 
                     # 检查 WAV 目录
                     if os.path.exists(tts_wav_dir):
-                        wav_files = [
-                            f
-                            for f in os.listdir(tts_wav_dir)
-                            if f.startswith("wav_") and f.endswith(".wav")
-                        ]
+                        wav_files = [f for f in os.listdir(tts_wav_dir) if f.startswith("wav_") and f.endswith(".wav")]
                         for wav_file in sorted(
                             wav_files,
                             key=lambda f: (
@@ -1577,9 +1453,7 @@ async def _streaming_generate_duplex(generate_request_time):
                                     continue
 
                                 if first_chunk_time is None:
-                                    first_chunk_time = (
-                                        time.time() - generate_start_time
-                                    ) * 1000
+                                    first_chunk_time = (time.time() - generate_start_time) * 1000
                                     print(
                                         f"[Generate 音频首响] {first_chunk_time:.1f}ms [双工]",
                                         flush=True,
@@ -1587,9 +1461,7 @@ async def _streaming_generate_duplex(generate_request_time):
 
                                 if audio_data.dtype != np.int16:
                                     audio_data = (audio_data * 32767).astype(np.int16)
-                                wav_base64 = base64.b64encode(
-                                    audio_data.tobytes()
-                                ).decode("utf-8")
+                                wav_base64 = base64.b64encode(audio_data.tobytes()).decode("utf-8")
 
                                 chunk_duration = len(audio_data) / audio_sr
                                 chunk_durations.append(chunk_duration)
@@ -1609,9 +1481,7 @@ async def _streaming_generate_duplex(generate_request_time):
                                 sent_wav_files.add(wav_file)
                                 sent_chunk_count += 1
                             except Exception as e:
-                                print(
-                                    f"[WAV 读取失败] {wav_file}: {e} [双工]", flush=True
-                                )
+                                print(f"[WAV 读取失败] {wav_file}: {e} [双工]", flush=True)
                                 sent_wav_files.add(wav_file)
 
             if all_generated_text:

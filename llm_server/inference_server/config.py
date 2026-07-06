@@ -23,9 +23,7 @@ CPP_SERVER_URL = None  # 在 lifespan 中根据 Python 端口设置
 
 # 模型配置 - 可通过环境变量覆盖
 LLAMACPP_ROOT = os.environ.get("LLAMACPP_ROOT", str(_DEFAULT_ROOT / "llama.cpp-omni"))
-DEFAULT_MODEL_DIR = os.environ.get(
-    "MODEL_DIR", str(_DEFAULT_ROOT / "models" / "openbmb" / "MiniCPM-o-4_5-gguf")
-)
+DEFAULT_MODEL_DIR = os.environ.get("MODEL_DIR", str(_DEFAULT_ROOT / "models" / "openbmb" / "MiniCPM-o-4_5-gguf"))
 DEFAULT_LLM_MODEL = os.environ.get("LLM_MODEL", "")
 DEFAULT_GPU_DEVICES = os.environ.get("CUDA_VISIBLE_DEVICES", "")
 DEFAULT_CTX_SIZE = int(os.environ.get("CTX_SIZE", "8192"))
@@ -74,10 +72,7 @@ def auto_detect_llm_model(model_dir: str) -> str:
         llm_candidates = [
             f
             for f in all_gguf
-            if not any(
-                x in os.path.basename(f).lower()
-                for x in ["audio", "vision", "tts", "projector"]
-            )
+            if not any(x in os.path.basename(f).lower() for x in ["audio", "vision", "tts", "projector"])
         ]
         if llm_candidates:
             return os.path.basename(sorted(llm_candidates)[0])
@@ -141,9 +136,7 @@ global_text_send_idx: int = 0
 global_sent_wav_files: set = set()
 
 # WAV 发送时序日志
-WAV_TIMING_LOG_PATH = os.path.join(
-    os.environ.get("LLM_SERVER_OUTPUT_DIR", CPP_OUTPUT_DIR), "wav_timing.log"
-)
+WAV_TIMING_LOG_PATH = os.path.join(os.environ.get("LLM_SERVER_OUTPUT_DIR", CPP_OUTPUT_DIR), "wav_timing.log")
 wav_timing_log_file: Optional[Any] = None
 last_wav_send_time: Optional[float] = None
 

@@ -223,9 +223,7 @@ class TestOmniInit:
             "output_dir": cpp_server["output_dir"],
             "vision_backend": cfg.VISION_BACKEND,
         }
-        resp = requests.post(
-            f"{cpp_server['base_url']}/v1/stream/omni_init", json=body, timeout=120
-        )
+        resp = requests.post(f"{cpp_server['base_url']}/v1/stream/omni_init", json=body, timeout=120)
         assert resp.status_code == 200
         data = resp.json()
         assert data.get("success") is True
@@ -245,9 +243,7 @@ class TestOmniInit:
             "output_dir": cpp_server["output_dir"],
             "vision_backend": cfg.VISION_BACKEND,
         }
-        resp = requests.post(
-            f"{cpp_server['base_url']}/v1/stream/omni_init", json=body, timeout=120
-        )
+        resp = requests.post(f"{cpp_server['base_url']}/v1/stream/omni_init", json=body, timeout=120)
         data = resp.json()
         for key in ("success", "media_type", "use_tts"):
             assert key in data, f"Missing key: {key}"
@@ -290,9 +286,7 @@ class TestPrefillAndGenerate:
             "img_path_prefix": "",
             "cnt": 0,
         }
-        resp = requests.post(
-            f"{base_url}/v1/stream/prefill", json=prefill_body, timeout=30
-        )
+        resp = requests.post(f"{base_url}/v1/stream/prefill", json=prefill_body, timeout=30)
         assert resp.status_code == 200
 
         # Then generate
@@ -331,9 +325,7 @@ class TestPrefillAndGenerate:
             "stream": True,
             "round_idx": 1,
         }
-        resp = requests.post(
-            f"{base_url}/v1/stream/decode", json=gen_body, timeout=120, stream=True
-        )
+        resp = requests.post(f"{base_url}/v1/stream/decode", json=gen_body, timeout=120, stream=True)
         assert resp.status_code == 200
 
         # Read first few SSE events
@@ -386,9 +378,7 @@ class TestPromptTextInjection:
             "prompt_text": "",
         }
         resp = requests.post(f"{base_url}/v1/stream/prefill", json=body, timeout=30)
-        assert resp.status_code == 200, (
-            f"prefill with empty prompt_text failed: {resp.text}"
-        )
+        assert resp.status_code == 200, f"prefill with empty prompt_text failed: {resp.text}"
 
     def test_missing_prompt_text_field_still_works(self, omni_initialized):
         """prefill without prompt_text field at all should work (backward compat)."""
@@ -422,9 +412,7 @@ class TestPromptTextInjection:
             "cnt": 0,
             "prompt_text": "【直播间动态】\n[SC -¥50] saki: 你这个人满脑子都是自己呢\n[soyo] : 哦内盖",
         }
-        resp = requests.post(
-            f"{base_url}/v1/stream/prefill", json=prefill_body, timeout=30
-        )
+        resp = requests.post(f"{base_url}/v1/stream/prefill", json=prefill_body, timeout=30)
         assert resp.status_code == 200
 
         gen_body = {"debug_dir": output_dir, "stream": True, "round_idx": 0}

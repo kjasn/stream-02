@@ -122,9 +122,7 @@ def restart_cpp_server(model_dir: str, gpu_devices: str):
     config.global_text_send_idx = 0
     config.global_sent_wav_files = set()
 
-    start_cpp_server(
-        model_dir=model_dir, gpu_devices=gpu_devices, port=config.CPP_SERVER_PORT
-    )
+    start_cpp_server(model_dir=model_dir, gpu_devices=gpu_devices, port=config.CPP_SERVER_PORT)
 
     print("[重启] C++ llama-server 重启完成", flush=True)
 
@@ -438,15 +436,9 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
         os.path.join(llamacpp_root, "build/bin/llama-server.exe"),
     ]
     if platform.system() == "Darwin":
-        candidates.append(
-            os.path.join(
-                llamacpp_root, "build-arm64-apple-clang-release/bin/llama-server"
-            )
-        )
+        candidates.append(os.path.join(llamacpp_root, "build-arm64-apple-clang-release/bin/llama-server"))
     elif platform.system() != "Windows":
-        candidates.append(
-            os.path.join(llamacpp_root, "build-x64-linux-cuda-release/bin/llama-server")
-        )
+        candidates.append(os.path.join(llamacpp_root, "build-x64-linux-cuda-release/bin/llama-server"))
 
     for c in candidates:
         if os.path.exists(c):
@@ -531,9 +523,7 @@ def start_cpp_server(model_dir: str, gpu_devices: str, port: int):
     max_wait = 180
     for i in range(max_wait):
         try:
-            resp = requests.get(
-                f"http://{config.CPP_SERVER_HOST}:{port}/health", timeout=2
-            )
+            resp = requests.get(f"http://{config.CPP_SERVER_HOST}:{port}/health", timeout=2)
             if resp.status_code == 200:
                 print(f"C++ llama-server 启动成功 (等待 {i + 1} 秒)", flush=True)
                 return True

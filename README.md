@@ -68,3 +68,10 @@
         ```sh
         uv run -m backend
         ```
+
+
+## Development
+
+```sh
+uv run ruff format .
+```

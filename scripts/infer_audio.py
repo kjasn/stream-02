@@ -44,12 +44,8 @@ def build_wav(sample_rate=16000, duration_sec=1.0):
 def main():
     parser = argparse.ArgumentParser(description="MiniCPM-o quick audio inference")
     parser.add_argument("--port", type=int, default=19060, help="C++ server port")
-    parser.add_argument(
-        "--text", type=str, default="请用中文简单介绍一下你自己。", help="Prompt text"
-    )
-    parser.add_argument(
-        "--play", action="store_true", default=True, help="Play audio after generation"
-    )
+    parser.add_argument("--text", type=str, default="请用中文简单介绍一下你自己。", help="Prompt text")
+    parser.add_argument("--play", action="store_true", default=True, help="Play audio after generation")
     parser.add_argument("--no-play", dest="play", action="store_false")
     args = parser.parse_args()
 

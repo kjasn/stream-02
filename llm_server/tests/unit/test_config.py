@@ -138,6 +138,7 @@ class TestConfigDefaults:
 
     def test_llamacpp_root_default(self):
         import llm_server.inference_server.config as fresh_cfg
+
         assert "llama.cpp-omni" in str(fresh_cfg.LLAMACPP_ROOT)
 
     def test_vision_backend_default(self):

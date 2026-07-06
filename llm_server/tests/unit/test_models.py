@@ -38,9 +38,11 @@ class TestInitSysPromptRequest:
     def test_json_parsing_with_snake_case(self):
         from llm_server.inference_server.server import InitSysPromptRequest
 
-        req = InitSysPromptRequest.model_validate({
-            "media_type": "audio",
-        })
+        req = InitSysPromptRequest.model_validate(
+            {
+                "media_type": "audio",
+            }
+        )
         assert req.media_type == "audio"
 
 
@@ -63,9 +65,7 @@ class TestStreamingPrefillRequest:
     def test_prompt_text_field(self):
         from llm_server.inference_server.server import StreamingPrefillRequest
 
-        req = StreamingPrefillRequest(
-            prompt_text="【直播间动态】\n[弹幕] 用户A: 测试"
-        )
+        req = StreamingPrefillRequest(prompt_text="【直播间动态】\n[弹幕] 用户A: 测试")
         assert req.prompt_text == "【直播间动态】\n[弹幕] 用户A: 测试"
         assert req.audio is None
         assert req.image is None

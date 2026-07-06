@@ -22,18 +22,14 @@ def main():
         default=cfg.LLAMACPP_ROOT,
         help="llama.cpp-omni 根目录",
     )
-    parser.add_argument(
-        "--model-dir", type=str, default=cfg.DEFAULT_MODEL_DIR, help="GGUF 模型目录"
-    )
+    parser.add_argument("--model-dir", type=str, default=cfg.DEFAULT_MODEL_DIR, help="GGUF 模型目录")
     parser.add_argument(
         "--llm-model",
         type=str,
         default=cfg.DEFAULT_LLM_MODEL,
         help="LLM 模型文件名（可选，默认自动检测）",
     )
-    parser.add_argument(
-        "--gpu-devices", type=str, default=cfg.DEFAULT_GPU_DEVICES, help="GPU 设备"
-    )
+    parser.add_argument("--gpu-devices", type=str, default=cfg.DEFAULT_GPU_DEVICES, help="GPU 设备")
     parser.add_argument("--duplex", action="store_true", help="默认使用双工模式")
     parser.add_argument("--simplex", action="store_true", help="默认使用单工模式")
     parser.add_argument("--output-dir", type=str, default=None, help="C++ 输出目录")
@@ -77,15 +73,11 @@ def main():
 
     # 设置参考音频路径
     if not cfg.FIXED_TIMBRE_PATH or not os.path.exists(cfg.FIXED_TIMBRE_PATH):
-        cfg.FIXED_TIMBRE_PATH = os.path.join(
-            args.llamacpp_root, "tools/omni/assets/default_ref_audio.wav"
-        )
+        cfg.FIXED_TIMBRE_PATH = os.path.join(args.llamacpp_root, "tools/omni/assets/default_ref_audio.wav")
 
     # 视觉编码器后端
     if args.vision_backend == "coreml":
-        vision_coreml = os.path.join(
-            args.model_dir, "vision", "coreml_minicpmo45_vit_all_f16.mlmodelc"
-        )
+        vision_coreml = os.path.join(args.model_dir, "vision", "coreml_minicpmo45_vit_all_f16.mlmodelc")
         if os.path.exists(vision_coreml):
             cfg.VISION_BACKEND = "coreml"
             print("Vision backend: CoreML/ANE", flush=True)
@@ -103,9 +95,7 @@ def main():
     if args.output_dir:
         cfg.CPP_OUTPUT_DIR = args.output_dir
     else:
-        cfg.CPP_OUTPUT_DIR = os.path.join(
-            args.llamacpp_root, f"tools/omni/output_{args.port}"
-        )
+        cfg.CPP_OUTPUT_DIR = os.path.join(args.llamacpp_root, f"tools/omni/output_{args.port}")
     os.makedirs(cfg.CPP_OUTPUT_DIR, exist_ok=True)
 
     # 保存到 app.state

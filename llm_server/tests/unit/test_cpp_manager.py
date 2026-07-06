@@ -86,4 +86,3 @@ class TestGetLocalIp:
 
         ip = get_local_ip()
         assert ip == "10.0.0.1"
-
