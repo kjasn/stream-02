@@ -1,5 +1,8 @@
 ## Quick Start
 
+### 前提
+
+安装 cmake, uv
 
 ### 本地部署(基于 `MiniCPM-o-4_5`)
 1. 下载任意 MiniCPM-o-4_5-gguf 模型，`llm_server/models`文件内容如下

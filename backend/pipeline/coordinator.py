@@ -3,8 +3,8 @@
 import time
 from typing import Optional
 
-from common.config import PipelineSettings
-from common.types import DanmakuEvent
+from backend.common.config import PipelineSettings
+from backend.common.types import DanmakuEvent
 
 from .context import Stage4ContextAssembler
 from .filter import Stage1Filter

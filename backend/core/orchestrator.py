@@ -9,13 +9,13 @@ import signal
 import time
 from typing import Optional
 
-from common.config import Settings, get_settings
-from common.types import MediaType, SessionConfigRequest
-from pipeline.coordinator import DanmakuPipeline
-from services.live.danmaku_collector import DanmakuCollector
-from services.livekit.lk_room import LiveKitRoom
-from services.livekit.token import LiveKitTokenProvider
-from services.llm.client import LLMClient
+from backend.common.config import Settings, get_settings
+from backend.common.types import MediaType, SessionConfigRequest
+from backend.pipeline.coordinator import DanmakuPipeline
+from backend.services.live.danmaku_collector import DanmakuCollector
+from backend.services.livekit.lk_room import LiveKitRoom
+from backend.services.livekit.token import LiveKitTokenProvider
+from backend.services.llm.client import LLMClient
 
 from .trigger import InferenceTrigger
 
@@ -86,9 +86,7 @@ class LiveStreamOrchestrator:
     def bili_connected(self) -> bool:
         return self._bili_connected
 
-    async def start(
-        self, session_config: Optional[SessionConfigRequest] = None
-    ) -> None:
+    async def start(self, session_config: Optional[SessionConfigRequest] = None) -> None:
         """Start all services and begin the inference loop."""
         if session_config is None:
             session_config = SessionConfigRequest(
@@ -123,14 +121,10 @@ class LiveStreamOrchestrator:
             self._llm_connected = False
 
         # Launch background tasks
-        self._tasks.append(
-            asyncio.create_task(self._inference_loop(), name="inference_loop")
-        )
+        self._tasks.append(asyncio.create_task(self._inference_loop(), name="inference_loop"))
 
         if self._config.bilibili.enabled:
-            self._tasks.append(
-                asyncio.create_task(self._run_bili(), name="bili_client")
-            )
+            self._tasks.append(asyncio.create_task(self._run_bili(), name="bili_client"))
 
         # LiveKit connection (optional — fails gracefully if no server)
         self._tasks.append(asyncio.create_task(self._run_livekit(), name="livekit"))

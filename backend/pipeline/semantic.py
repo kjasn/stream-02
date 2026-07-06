@@ -4,7 +4,7 @@ import difflib
 import time
 from typing import Optional
 
-from common.types import DanmakuEvent
+from backend.common.types import DanmakuEvent
 
 
 class Stage3SemanticDedup:

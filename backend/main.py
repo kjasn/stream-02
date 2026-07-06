@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .common.config import get_settings
+from backend.common.config import get_settings
 
 settings = get_settings()
 logger = logging.getLogger("backend")

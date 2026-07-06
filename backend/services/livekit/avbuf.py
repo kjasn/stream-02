@@ -29,10 +29,7 @@ class AudioFrameBuffer:
         """Ingest a LiveKit AudioFrame."""
         from scipy.signal import resample_poly
 
-        arr = (
-            np.frombuffer(frame.data.tobytes(), dtype=np.int16).astype(np.float32)
-            / 32768.0
-        )
+        arr = np.frombuffer(frame.data.tobytes(), dtype=np.int16).astype(np.float32) / 32768.0
         if arr.ndim > 1 and arr.shape[1] > 1:
             arr = arr.mean(axis=1)
         if frame.sample_rate != self.sample_rate:
@@ -48,9 +45,7 @@ class AudioFrameBuffer:
         needed = int(duration * self.sample_rate)
         if len(self._buffer) < min(needed, self.sample_rate // 2):
             return None
-        segment = (
-            self._buffer[-needed:] if len(self._buffer) >= needed else self._buffer
-        )
+        segment = self._buffer[-needed:] if len(self._buffer) >= needed else self._buffer
         buf = io.BytesIO()
         sf.write(buf, segment, self.sample_rate, format="WAV", subtype="PCM_16")
         return buf.getvalue()
@@ -87,11 +82,7 @@ class VideoFrameBuffer:
         from PIL import Image
 
         try:
-            rgb_frame = (
-                frame
-                if frame.type == rtc.VideoBufferType.RGB24
-                else frame.convert(rtc.VideoBufferType.RGB24)
-            )
+            rgb_frame = frame if frame.type == rtc.VideoBufferType.RGB24 else frame.convert(rtc.VideoBufferType.RGB24)
         except Exception as exc:
             logger.warning(f"Cannot convert video frame to RGB24: {exc}")
             return
@@ -111,9 +102,7 @@ class VideoFrameBuffer:
         try:
             img = Image.fromarray(arr, mode="RGB")
         except (ValueError, TypeError):
-            logger.warning(
-                f"Cannot create image from video frame: shape={arr.shape}, size={arr.size}"
-            )
+            logger.warning(f"Cannot create image from video frame: shape={arr.shape}, size={arr.size}")
             return
 
         buf = io.BytesIO()

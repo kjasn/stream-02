@@ -4,7 +4,7 @@ import time
 from collections import deque
 from typing import Optional
 
-from common.types import DanmakuEvent
+from backend.common.types import DanmakuEvent
 from .priority import compute_priority
 
 PROMPT_TEMPLATE = """你是一个直播间AI助手。以下是最近{seconds}秒的弹幕动态：
@@ -16,9 +16,7 @@ PROMPT_TEMPLATE = """你是一个直播间AI助手。以下是最近{seconds}秒
 class Stage4ContextAssembler:
     """Assembles context text for LLM from buffered DanmakuEvents."""
 
-    def __init__(
-        self, ttl_seconds: float = 60.0, max_events: int = 50, token_budget: int = 2048
-    ):
+    def __init__(self, ttl_seconds: float = 60.0, max_events: int = 50, token_budget: int = 2048):
         self._ttl = ttl_seconds
         self._token_budget = token_budget
         self._buffer: deque[DanmakuEvent] = deque(maxlen=max_events)

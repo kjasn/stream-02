@@ -7,7 +7,15 @@ from backend.pipeline.semantic import Stage3SemanticDedup
 
 
 def _event(msg="test", uname="user1"):
-    return DanmakuEvent(cmd="LIVE_OPEN_PLATFORM_DM", raw={}, timestamp=time.time(), user_id="1", user_name=uname, msg=msg, value=0)
+    return DanmakuEvent(
+        cmd="LIVE_OPEN_PLATFORM_DM",
+        raw={},
+        timestamp=time.time(),
+        user_id="1",
+        user_name=uname,
+        msg=msg,
+        value=0,
+    )
 
 
 def test_first_message_accepted():

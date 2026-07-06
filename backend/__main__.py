@@ -1,11 +1,10 @@
 """Entry point: python -m backend"""
 
 import logging
-import sys
 
 import uvicorn
 
-from .common.config import get_settings
+from backend.common.config import get_settings
 
 
 def main():

@@ -5,7 +5,7 @@ import logging
 import time
 from typing import Optional
 
-from common.types import DanmakuEvent
+from backend.common.types import DanmakuEvent
 
 logger = logging.getLogger("backend.core.trigger")
 
@@ -36,9 +36,7 @@ class InferenceTrigger:
             if event.cmd in self._event_types:
                 self._last_inference = time.time()
                 self._pending_count = 0
-                logger.info(
-                    f"Event-driven trigger: {event.cmd} (priority={event.priority})"
-                )
+                logger.info(f"Event-driven trigger: {event.cmd} (priority={event.priority})")
                 return True
         return False
 

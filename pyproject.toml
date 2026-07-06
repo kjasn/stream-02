@@ -32,4 +32,42 @@ markers = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.4.2", "pytest-asyncio>=1.2.0"]
+dev = ["pytest>=8.4.2", "pytest-asyncio>=1.2.0", "ruff>=0.15.20"]
+
+[tool.ruff]
+# 目标 Python 版本
+target-version = "py311"
+# 每行最大字符数（Black 的默认值是 88）
+line-length = 120
+
+# 需要检查和排除的文件/目录
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+exclude = [".git", ".venv", "__pypackages__", "build", "dist", "node_modules"]
+
+[tool.ruff.lint]
+# 开启的规则分类
+select = [
+    "E",   # pycodestyle 错误（基础语法与格式）
+    "W",   # pycodestyle 警告
+    "F",   # Pyflakes（潜在 Bug 和未定义变量）
+    "I",   # isort（自动排序导入语句）
+    "B",   # flake8-bugbear（常见代码设计缺陷/Bug 隐患）
+    "C90", # mccabe（代码圈复杂度检查）
+    "RUF", # Ruff 专属的优化规则
+]
+
+# 如果有特定想要忽略的规则，可以写在这里
+ignore = [
+    # "E501", # 忽略行超长警告（如果信任格式化工具，可以解开此行）
+]
+
+[tool.ruff.lint.mccabe]
+# 代码圈复杂度最大值（通常推荐 10 左右，超过说明函数太复杂需要拆分）
+max-complexity = 10
+
+[tool.ruff.format]
+# 格式化配置（默认完全兼容 Black）
+quote-style = "double"            # 优先使用双引号
+indent-style = "space"            # 使用空格缩进
+skip-magic-trailing-comma = false # 保留末尾逗号触发的换行习惯
+line-ending = "auto"              # 自动检测换行符（CRLF/LF）

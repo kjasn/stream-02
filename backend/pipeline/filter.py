@@ -4,7 +4,7 @@ import hashlib
 import time
 from typing import Optional
 
-from common.types import DanmakuEvent
+from backend.common.types import DanmakuEvent
 
 
 class Stage1Filter:
@@ -66,13 +66,9 @@ class Stage1Filter:
     def _expire(self, now: float) -> None:
         """Purge stale dedup entries and rate-limit timestamps."""
         dedup_cutoff = now - self._dedup_window
-        self._recent_messages = {
-            k: ts for k, ts in self._recent_messages.items() if ts >= dedup_cutoff
-        }
+        self._recent_messages = {k: ts for k, ts in self._recent_messages.items() if ts >= dedup_cutoff}
         rate_cutoff = now - self._rate_window
         for uid in list(self._user_timestamps):
-            self._user_timestamps[uid] = [
-                ts for ts in self._user_timestamps[uid] if ts >= rate_cutoff
-            ]
+            self._user_timestamps[uid] = [ts for ts in self._user_timestamps[uid] if ts >= rate_cutoff]
             if not self._user_timestamps[uid]:
                 del self._user_timestamps[uid]

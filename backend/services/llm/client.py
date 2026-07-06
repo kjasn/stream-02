@@ -6,11 +6,12 @@ Pattern adopted from MiniCpmModel in model_call.py.
 import base64
 import json
 import logging
-from typing import AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
 
 import aiohttp
 import numpy as np
-from common.types import SessionConfigRequest
+
+from backend.common.types import SessionConfigRequest
 
 logger = logging.getLogger("backend.llm.client")
 
@@ -21,7 +22,7 @@ class LLMClient:
     def __init__(self, base_url: str, timeout: float = 300.0):
         self.base_url = base_url.rstrip("/")
         self._timeout = aiohttp.ClientTimeout(total=timeout)
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self) -> "LLMClient":
         self._session = aiohttp.ClientSession(timeout=self._timeout)
@@ -56,9 +57,9 @@ class LLMClient:
     async def prefill(
         self,
         session_id: str,
-        audio_base64: Optional[str] = None,
-        image_base64: Optional[str] = None,
-        prompt_text: Optional[str] = None,
+        audio_base64: str | None = None,
+        image_base64: str | None = None,
+        prompt_text: str | None = None,
         **kwargs,
     ) -> dict:
         """POST /omni/streaming_prefill — send prefill data (audio, image, text)."""
@@ -116,9 +117,7 @@ class LLMClient:
                     wav_b64 = data["chunk_data"]["wav"]
                     if isinstance(wav_b64, str):
                         wav_bytes = base64.b64decode(wav_b64)
-                        data["chunk_data"]["wav"] = np.frombuffer(
-                            wav_bytes, dtype=np.int16
-                        )
+                        data["chunk_data"]["wav"] = np.frombuffer(wav_bytes, dtype=np.int16)
 
                 yield data
 

@@ -5,7 +5,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from common.types import SessionConfigRequest, SessionStatusResponse
+from backend.common.types import SessionConfigRequest, SessionStatusResponse
 
 logger = logging.getLogger("backend.routes")
 router = APIRouter()

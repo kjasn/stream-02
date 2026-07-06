@@ -2,11 +2,11 @@ import asyncio
 import io
 import logging
 import time
-from typing import Optional
 
 import numpy as np
-from common.types import AvSegment
 from livekit import rtc
+
+from backend.common.types import AvSegment
 
 from .avbuf import AudioFrameBuffer, VideoFrameBuffer
 from .token import LiveKitTokenProvider
@@ -25,8 +25,8 @@ class LiveKitRoom:
     def __init__(self, config, token_provider: LiveKitTokenProvider):
         self._config = config
         self._token_provider = token_provider
-        self._room: Optional[rtc.Room] = None
-        self._audio_source: Optional[rtc.AudioSource] = None
+        self._room: rtc.Room | None = None
+        self._audio_source: rtc.AudioSource | None = None
         self._audio_buffer = AudioFrameBuffer()
         self._video_buffer = VideoFrameBuffer()
         self._connected = False

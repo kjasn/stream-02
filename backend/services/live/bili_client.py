@@ -173,9 +173,7 @@ class BiliLiveClient:
         headers = self._sign(params)
 
         assert self._session is not None
-        async with self._session.post(
-            f"{self.host}/v2/app/start", headers=headers, data=params
-        ) as response:
+        async with self._session.post(f"{self.host}/v2/app/start", headers=headers, data=params) as response:
             data = await response.json()
             print("[API] /v2/app/start:", json.dumps(data, ensure_ascii=False))
             self.game_id = data["data"]["game_info"]["game_id"]
@@ -192,9 +190,7 @@ class BiliLiveClient:
             params = json.dumps({"game_id": self.game_id})
             headers = self._sign(params)
             try:
-                async with self._session.post(
-                    url, headers=headers, data=params
-                ) as response:
+                async with self._session.post(url, headers=headers, data=params) as response:
                     await response.json()
                     print("[appHeartbeat] success")
             except Exception as e:
@@ -371,9 +367,7 @@ async def bili_client():
 
     @client.on(BiliLiveClient.CMD_GIFT)
     def on_gift(data):
-        print(
-            f"礼物 [{data.get('uname')}]: {data.get('gift_name')} x{data.get('gift_num')}"
-        )
+        print(f"礼物 [{data.get('uname')}]: {data.get('gift_name')} x{data.get('gift_num')}")
 
     @client.on(BiliLiveClient.CMD_GUARD)
     def on_guard(data):
@@ -391,8 +385,6 @@ async def bili_client():
 
     @client.on("*")
     def on_all(data):
-        print(
-            f"[msg] {data.get('cmd', 'unknown')}: {json.dumps(data, ensure_ascii=False)[:200]}"
-        )
+        print(f"[msg] {data.get('cmd', 'unknown')}: {json.dumps(data, ensure_ascii=False)[:200]}")
 
     asyncio.run(client.run())
