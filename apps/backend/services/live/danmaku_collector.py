@@ -7,7 +7,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from ...pipeline.coordinator import DanmakuPipeline
+    from pipeline.coordinator import DanmakuPipeline
 
 # 优先级
 _EVENT_PRIORITY = {

@@ -5,9 +5,9 @@ import time
 from typing import Optional
 
 import numpy as np
+from common.types import AvSegment
 from livekit import rtc
 
-from ...common.types import AvSegment
 from .avbuf import AudioFrameBuffer, VideoFrameBuffer
 from .token import LiveKitTokenProvider
 
