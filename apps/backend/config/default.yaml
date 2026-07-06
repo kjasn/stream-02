@@ -1,0 +1,48 @@
+# stream-02 Backend default configuration
+server:
+  host: "0.0.0.0"
+  port: 8070
+  log_level: "info"
+
+livekit:
+  url: "ws://localhost:7880"
+  api_key: "devkey"
+  api_secret: ""
+  room: "stream-room"
+  identity_prefix: "ai-backend"
+
+bilibili:
+  enabled: true
+  id_code: ""
+  app_id: 0
+  key: ""
+  secret: ""
+  reconnect_delay: 5.0
+  max_reconnect_attempts: 0
+
+llm_server:
+  base_url: "http://127.0.0.1:8060"
+  default_duplex_mode: false
+  language: "zh"
+  request_timeout: 300.0
+
+pipeline:
+  ttl_seconds: 60.0
+  max_events: 50
+  dedup_window_seconds: 30.0
+  rate_limit_per_user: 5
+  rate_limit_window_seconds: 60.0
+  spam_keywords:
+    - "广告"
+    - "加群"
+    - "私信"
+  blacklist_uids: []
+  token_budget: 2048
+  similarity_threshold: 0.85
+  merge_window_seconds: 10.0
+
+inference:
+  time_window_seconds: 15.0
+  event_driven_types:
+    - "LIVE_OPEN_PLATFORM_SUPER_CHAT"
+    - "LIVE_OPEN_PLATFORM_GUARD"
