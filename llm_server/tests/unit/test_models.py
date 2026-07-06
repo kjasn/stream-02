@@ -2,9 +2,6 @@
 
 import re
 
-import pytest
-from pydantic import ValidationError
-
 
 class TestInitSysPromptRequest:
     """Tests for InitSysPromptRequest model."""
@@ -160,7 +157,7 @@ class TestProtoPackUnpack:
     """Tests for the Bilibili Proto binary protocol."""
 
     def test_pack_and_unpack_roundtrip(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         original = Proto()
         original.op = 7
@@ -177,14 +174,14 @@ class TestProtoPackUnpack:
         assert unpacked.body == b'{"test": "data"}'
 
     def test_unpack_incomplete_header_returns_zero(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         p = Proto()
         n = p.unpack(b"\x00\x01\x02")
         assert n == 0
 
     def test_unpack_insufficient_body_returns_zero(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         p = Proto()
         p.packet_len = 100
@@ -192,7 +189,7 @@ class TestProtoPackUnpack:
         assert n > 0  # Reads the valid packet, ignores the extra byte
 
     def test_decode_body_ver0_json(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         p = Proto()
         p.ver = 0
@@ -201,7 +198,7 @@ class TestProtoPackUnpack:
         assert result == [{"cmd": "TEST"}]
 
     def test_decode_body_ver0_empty(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         p = Proto()
         p.ver = 0
@@ -210,7 +207,7 @@ class TestProtoPackUnpack:
         assert result == []
 
     def test_heartbeat_ops(self):
-        from backend.services.bili_client import Proto
+        from backend.services.live.bili_client import Proto
 
         assert Proto.OP_HEARTBEAT == 2
         assert Proto.OP_HEARTBEAT_REPLY == 3
