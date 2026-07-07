@@ -54,14 +54,18 @@
 
 3.  `backend`服务
 
-    1. 配置环境变量，**`.env` 文件模板**
+    1. 配置环境变量，**`base.yaml` 文件模板 `/backend/config/default.yaml`**，通过 B 站开放平台获取
 
-        ```text
+        ```yaml
         # BiliLive 配置
-        BILI_ID_CODE=xxx    # 
-        BILI_APP_ID=xxx     #
-        BILI_KEY=xxx        # bilibili 开放平台申请 
-        BILI_SECRET=xxx     # bilibili 开放平台申请
+        bilibili:
+            enabled: true
+            id_code: '' # required
+            app_id: # required
+            key: '' # required
+            secret: '' # required
+            reconnect_delay: 5.0
+            max_reconnect_attempts: 0
         ```
 
     2. 启动服务
