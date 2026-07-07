@@ -42,9 +42,12 @@
 2. 启动 `llm_server` 服务，基于 FastAPI 包装的多模态模型接口层
 
    ```sh
-   # 第一次使用 init，后续更新只需要 update 即可
-   git submodule update --init --recursive
-   # git submodule update --remote
+    # 第一次使用（初始化子模块）
+    git submodule update --init --recursive
+    # 后续更新（拉取主仓库后同步子模块）
+    git submodule update --recursive
+    # 可选：跟踪 .gitmodules 中设置的分支更新到最新提交
+    # git submodule update --remote --recursive
 
    make build-cpp # 编译 llama.cpp-omni
 
