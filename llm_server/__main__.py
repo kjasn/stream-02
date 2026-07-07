@@ -5,8 +5,8 @@ import sys
 
 import uvicorn
 
-from .inference_server import config as cfg
-from .inference_server.server import app
+from llm_server.inference_server import config as cfg
+from llm_server.inference_server.server import app
 
 
 def main():

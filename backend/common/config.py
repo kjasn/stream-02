@@ -32,7 +32,7 @@ class BilibiliSettings(BaseSettings):
     reconnect_delay: float = Field(default=5.0)
     max_reconnect_attempts: int = Field(default=0)
 
-    model_config = SettingsConfigDict(env_prefix="BILIBILI_", case_sensitive=False)
+    model_config = SettingsConfigDict(env_prefix="BILI_", case_sensitive=False)
 
 
 class LLMServerSettings(BaseSettings):
@@ -110,15 +110,15 @@ class Settings(BaseSettings):
 
         config_data: dict = {}
 
+        # Load default config
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                config_data = _deep_merge(config_data, yaml.safe_load(f) or {})
+
         # Load base config
         base_path = config_dir / "base.yaml"
         if base_path.exists():
             with open(base_path, encoding="utf-8") as f:
-                config_data = _deep_merge(config_data, yaml.safe_load(f) or {})
-
-        # Load default config
-        if config_path.exists():
-            with open(config_path, encoding="utf-8") as f:
                 config_data = _deep_merge(config_data, yaml.safe_load(f) or {})
 
         # Load env-specific config
