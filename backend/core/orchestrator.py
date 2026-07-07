@@ -5,7 +5,6 @@ Pattern adopted from room_start_monitor() in omini_backend_code.
 
 import asyncio
 import logging
-import signal
 import time
 from typing import Optional
 
@@ -57,6 +56,7 @@ class LiveStreamOrchestrator:
 
         # Bili
         self._bili_connected: bool = False
+        self._last_inference_time: Optional[float] = None
 
     # ── Public API ──
 
@@ -66,7 +66,7 @@ class LiveStreamOrchestrator:
 
     @property
     def active(self) -> bool:
-        return not self._shutdown_event.is_set()
+        return self._start_time > 0 and not self._shutdown_event.is_set()
 
     @property
     def uptime_seconds(self) -> float:
@@ -86,6 +86,10 @@ class LiveStreamOrchestrator:
     def bili_connected(self) -> bool:
         return self._bili_connected
 
+    @property
+    def last_inference_time(self) -> Optional[float]:
+        return self._last_inference_time
+
     async def start(self, session_config: Optional[SessionConfigRequest] = None) -> None:
         """Start all services and begin the inference loop."""
         if session_config is None:
@@ -97,14 +101,6 @@ class LiveStreamOrchestrator:
 
         self._start_time = time.time()
         logger.info("Orchestrator starting")
-
-        # Setup signal handlers
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            try:
-                loop = asyncio.get_event_loop()
-                loop.add_signal_handler(sig, lambda: asyncio.create_task(self.stop()))
-            except NotImplementedError:
-                pass
 
         # Init LLM session
         try:
@@ -119,6 +115,9 @@ class LiveStreamOrchestrator:
         except Exception as e:
             logger.warning(f"LLM init failed — inference will be unavailable: {e}")
             self._llm_connected = False
+
+        if self._shutdown_event.is_set():
+            return
 
         # Launch background tasks
         self._tasks.append(asyncio.create_task(self._inference_loop(), name="inference_loop"))
@@ -137,11 +136,21 @@ class LiveStreamOrchestrator:
         logger.info("Orchestrator shutting down")
         self._shutdown_event.set()
 
+        current_loop = asyncio.get_running_loop()
+        tasks_to_wait: list[asyncio.Task] = []
         for task in self._tasks:
-            if not task.done():
-                task.cancel()
-        if self._tasks:
-            await asyncio.gather(*self._tasks, return_exceptions=True)
+            task_loop = task.get_loop()
+            if task_loop.is_closed():
+                continue
+            if task_loop is current_loop:
+                if not task.done():
+                    task.cancel()
+                tasks_to_wait.append(task)
+            elif not task.done():
+                task_loop.call_soon_threadsafe(task.cancel)
+
+        if tasks_to_wait:
+            await asyncio.gather(*tasks_to_wait, return_exceptions=True)
         self._tasks.clear()
 
         await self.livekit.disconnect()
@@ -232,6 +241,7 @@ class LiveStreamOrchestrator:
         if not self._llm_connected or self._session_id is None:
             return
 
+        self._last_inference_time = time.time()
         logger.info("Starting inference cycle")
         try:
             context_text = self.pipeline.assemble_context()
