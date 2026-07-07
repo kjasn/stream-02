@@ -1,0 +1,4 @@
+[submodule "llm_server/llama.cpp-omni"]
+	path = llm_server/llama.cpp-omni
+	url = https://github.com/21ess/llama.cpp-omni
+	branch = feat/stream_with_text
