@@ -57,9 +57,7 @@ async def health():
 @router.post("/session/start")
 async def start_session(req: SessionConfigRequest, request: Request):
     task: asyncio.Task | None = getattr(request.app.state, "orchestrator_task", None)
-    orchestrator: LiveStreamOrchestrator | None = getattr(
-        request.app.state, "orchestrator", None
-    )
+    orchestrator: LiveStreamOrchestrator | None = getattr(request.app.state, "orchestrator", None)
 
     if _is_running(task) and orchestrator is not None:
         return {
@@ -83,9 +81,7 @@ async def start_session(req: SessionConfigRequest, request: Request):
 @router.post("/session/stop")
 async def stop_session(request: Request):
     task: asyncio.Task | None = getattr(request.app.state, "orchestrator_task", None)
-    orchestrator: LiveStreamOrchestrator | None = getattr(
-        request.app.state, "orchestrator", None
-    )
+    orchestrator: LiveStreamOrchestrator | None = getattr(request.app.state, "orchestrator", None)
 
     if orchestrator is not None:
         await orchestrator.stop()
@@ -102,9 +98,7 @@ async def stop_session(request: Request):
 @router.get("/status")
 async def get_status(request: Request) -> SessionStatusResponse:
     task: asyncio.Task | None = getattr(request.app.state, "orchestrator_task", None)
-    orchestrator: LiveStreamOrchestrator | None = getattr(
-        request.app.state, "orchestrator", None
-    )
+    orchestrator: LiveStreamOrchestrator | None = getattr(request.app.state, "orchestrator", None)
 
     if orchestrator is None:
         return SessionStatusResponse(

@@ -42,6 +42,7 @@ class DanmakuCollector:
     def add_event(self, data: dict) -> None:
         """Ingest a raw event from BiliLiveClient.
 
+        Invalid events will be filtered based on cmd by collector._format_event
         When a pipeline is configured, the event is run through all pipeline
         stages; if filtered out, nothing is stored.
         """
