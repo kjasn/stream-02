@@ -263,3 +263,5 @@ __marimo__/
 **/findings.md
 **/progress.md
 **/task_plan.md
+.specify/
+**/speckit-**/

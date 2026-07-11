@@ -15,7 +15,7 @@ logger = logging.getLogger("backend.livekit.client")
 
 
 # LiveKit audio: 48kHz mono int16
-WEBRTC_SAMPLE_RATE = 48000
+WEB_RTC_SAMPLE_RATE = 48000
 NUM_CHANNELS = 1
 
 
@@ -73,7 +73,7 @@ class LiveKitRoom:
         self._connected = True
 
         # Create audio source for TTS output
-        self._audio_source = rtc.AudioSource(WEBRTC_SAMPLE_RATE, NUM_CHANNELS, 960)
+        self._audio_source = rtc.AudioSource(WEB_RTC_SAMPLE_RATE, NUM_CHANNELS, 960)
         track = rtc.LocalAudioTrack.create_audio_track("tts-output", self._audio_source)
         options = rtc.TrackPublishOptions()
         options.source = rtc.TrackSource.SOURCE_MICROPHONE
@@ -111,8 +111,8 @@ class LiveKitRoom:
             data = data.mean(axis=1)
 
         # Resample to WebRTC 48kHz
-        if sr != WEBRTC_SAMPLE_RATE:
-            data = resample_poly(data, WEBRTC_SAMPLE_RATE, sr)
+        if sr != WEB_RTC_SAMPLE_RATE:
+            data = resample_poly(data, WEB_RTC_SAMPLE_RATE, sr)
 
         # Convert to int16
         data_int16 = (np.clip(data, -1.0, 1.0) * 32767).astype(np.int16)
@@ -125,7 +125,7 @@ class LiveKitRoom:
                 chunk = np.pad(chunk, (0, frame_size - len(chunk)))
             frame = rtc.AudioFrame(
                 data=chunk.tobytes(),
-                sample_rate=WEBRTC_SAMPLE_RATE,
+                sample_rate=WEB_RTC_SAMPLE_RATE,
                 num_channels=NUM_CHANNELS,
                 samples_per_channel=frame_size,
             )
