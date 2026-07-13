@@ -12,24 +12,6 @@ class MediaType(str, Enum):
     OMNI = "omni"
 
 
-class SessionConfigRequest(BaseModel):
-    media_type: MediaType = MediaType.OMNI
-    duplex_mode: bool = False
-    language: str = "zh"
-    bili_room_code: Optional[str] = None
-
-
-class SessionStatusResponse(BaseModel):
-    session_id: str = ""
-    active: bool = False
-    llm_connected: bool = False
-    livekit_connected: bool = False
-    bili_connected: bool = False
-    uptime_seconds: float = 0.0
-    event_count: int = 0
-    last_inference_time: Optional[float] = None
-
-
 class DanmakuEvent(BaseModel):
     cmd: str = ""
     raw: dict = Field(default_factory=dict)
@@ -46,3 +28,10 @@ class AvSegment(BaseModel):
     audio_sample_rate: int = 16000
     audio_duration: float = 0.0
     image_base64: Optional[str] = None
+
+
+class SessionConfig(BaseModel):
+    media_type: MediaType = MediaType.OMNI
+    duplex_mode: bool = False
+    language: str = "zh"
+    bili_room_code: Optional[str] = None

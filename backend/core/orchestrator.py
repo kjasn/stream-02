@@ -9,7 +9,7 @@ import time
 from typing import Optional
 
 from backend.common.config import Settings, get_settings
-from backend.common.types import MediaType, SessionConfigRequest
+from backend.common.types import MediaType, SessionConfig
 from backend.pipeline.coordinator import DanmakuPipeline
 from backend.services.live.danmaku_collector import DanmakuCollector
 from backend.services.livekit.lk_room import LiveKitRoom
@@ -90,10 +90,10 @@ class LiveStreamOrchestrator:
     def last_inference_time(self) -> Optional[float]:
         return self._last_inference_time
 
-    async def start(self, session_config: Optional[SessionConfigRequest] = None) -> None:
+    async def start(self, session_config: Optional[SessionConfig] = None) -> None:
         """Start all services and begin the inference loop."""
         if session_config is None:
-            session_config = SessionConfigRequest(
+            session_config = SessionConfig(
                 media_type=MediaType.OMNI,
                 duplex_mode=self._config.llm_server.default_duplex_mode,
                 language=self._config.llm_server.language,

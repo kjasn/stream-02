@@ -11,7 +11,7 @@ from collections.abc import AsyncGenerator
 import aiohttp
 import numpy as np
 
-from backend.common.types import SessionConfigRequest
+from backend.common.types import SessionConfig
 
 logger = logging.getLogger("backend.llm.client")
 
@@ -39,7 +39,7 @@ class LLMClient:
             raise RuntimeError("LLMClient not opened — use 'async with'")
         return self._session
 
-    async def init_session(self, config: SessionConfigRequest) -> dict:
+    async def init_session(self, config: SessionConfig) -> dict:
         """POST /omni/init_sys_prompt — initialise or reconfigure the model session."""
         body = {
             "media_type": config.media_type.value,

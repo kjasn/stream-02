@@ -7,8 +7,10 @@ import time
 from fastapi import APIRouter, Request
 
 from backend.common.config import get_settings
-from backend.common.types import SessionConfigRequest, SessionStatusResponse
+from backend.common.types import SessionConfig
 from backend.core.orchestrator import LiveStreamOrchestrator
+
+from .schemas.session import SessionConfigRequest, SessionStatusResponse
 
 logger = logging.getLogger("backend.routes")
 router = APIRouter()
@@ -68,7 +70,14 @@ async def start_session(req: SessionConfigRequest, request: Request):
 
     orchestrator = LiveStreamOrchestrator(get_settings())
     task = asyncio.create_task(
-        orchestrator.start(req),
+        orchestrator.start(
+            SessionConfig(
+                media_type=req.media_type,
+                duplex_mode=req.duplex_mode,
+                language=req.language,
+                bili_room_code=req.bili_room_code,
+            )
+        ),
         name="live_stream_orchestrator",
     )
     request.app.state.orchestrator = orchestrator
