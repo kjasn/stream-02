@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.common.config import get_settings
 from backend.core.orchestrator import LiveStreamOrchestrator
+from backend.io.mongo import mongo
 
 settings = get_settings()
 logger = logging.getLogger("backend")
@@ -16,12 +17,14 @@ logger = logging.getLogger("backend")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await mongo.connect()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     app.state.orchestrator = None
     app.state.orchestrator_task = None
     try:
         yield
     finally:
+        await mongo.close()
         logger.info("Shutting down")
         orchestrator: LiveStreamOrchestrator | None = app.state.orchestrator
         task: asyncio.Task | None = app.state.orchestrator_task

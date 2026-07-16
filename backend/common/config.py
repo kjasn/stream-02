@@ -79,6 +79,11 @@ class ServerSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SERVER_", case_sensitive=False)
 
 
+class DBSettings(BaseSettings):
+    mongo_url: str = Field(default="mongodb://localhost:27071")
+    mongo_db_name: str = Field(default="app")
+
+
 class Settings(BaseSettings):
     app_name: str = Field(default="stream-02 Backend")
     app_version: str = Field(default="0.1.0")
@@ -90,6 +95,7 @@ class Settings(BaseSettings):
     llm_server: LLMServerSettings = Field(default_factory=LLMServerSettings)
     pipeline: PipelineSettings = Field(default_factory=PipelineSettings)
     inference: InferenceSettings = Field(default_factory=InferenceSettings)
+    db: DBSettings = Field(default_factory=DBSettings)
 
     model_config = SettingsConfigDict(
         case_sensitive=False,
